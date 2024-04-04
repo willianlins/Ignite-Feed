@@ -1,44 +1,93 @@
 import styles from "./Post.module.css";
 
-import imgPerfil from "../../assets/monkey.jpg";
+import { Comment } from "../Comment";
+import { Avatar } from "../Avatar";
 
-export function Post({ name, content }) {
+import { format, formatDistanceToNow } from "date-fns";
+import ptBR from "date-fns/locale/pt-BR";
+import { useState } from "react";
+
+export function Post({ author, content, publishedhAt }) {
+  const [comments, setComments] = useState([
+    "Lorem ipsum, dolor sit amet consectetur adipisicing elit. Magnam blanditiis omnis eius ipsum.",
+  ]);
+
+  const [newCommentText, setNewCommentText] = useState("");
+
+  const publishedDateFormatted = format(
+    publishedhAt,
+    "d 'de' LLLL 'ás' HH:mm'h",
+    {
+      locale: ptBR,
+    }
+  );
+
+  const publishedDateRelativeToNow = formatDistanceToNow(publishedhAt, {
+    locale: ptBR,
+    addSuffix: true,
+  });
+
+  function handleCreateNewComment() {
+    event.preventDefault();
+
+    setComments([...comments, newCommentText]);
+    setNewCommentText('')
+  }
+
+  function handleNewCommentChange(){
+    setNewCommentText(event.target.value)
+  }
+
   return (
     <article className={styles.post}>
       <header>
         <div className={styles.author}>
-          <img className={styles.avatar} src={imgPerfil} alt="" />
+          <Avatar src={author.avatarUrl} />
           <div className={styles.authorInfo}>
-            <strong>Willian Lins</strong>
-            <span>Web Debeloper</span>
+            <strong>{author.name}</strong>
+            <span>{author.role}</span>
           </div>
         </div>
-        <time title="03 de abril ás 10:00" dateTime="2024-04-03 10:00:00">
-          Publicado há 1h
+        <time
+          title={publishedDateFormatted}
+          dateTime={publishedhAt.toISOString()}
+        >
+          {publishedDateRelativeToNow}
         </time>
       </header>
 
       <div className={styles.content}>
-        <p>Salve!!! 🚀</p>
-        <p>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Doloremque
-          vitae ipsum voluptate error minima provident consectetur laboriosam at
-          libero reiciendis! Libero perspiciatis saepe aut, itaque autem nobis
-          pariatur eligendi ducimus.
-        </p>
-
-        <p>
-          <a href="">#Novoprojeto</a>
-        </p>
+        {content.map((line) => {
+          if (line.type === "paragraph") {
+            return <p>{line.content}</p>;
+          } else if (line.type === "link") {
+            return (
+              <p>
+                <a href="#">{line.content}</a>
+              </p>
+            );
+          }
+        })}
       </div>
 
-      <form className={styles.commentForm}>
+      <form onSubmit={handleCreateNewComment} className={styles.commentForm}>
         <strong>Deixe seu feedback</strong>
-        <textarea placeholder="Deixe um comentário" />
+        <textarea
+          onChange={handleNewCommentChange}
+          value={newCommentText}
+          placeholder="Deixe um comentário"
+          name="comment"
+        />
         <footer>
           <button type="submit">Publicar</button>
         </footer>
       </form>
+
+      <div className={styles.commentList}>
+        {comments.map((comment) => {
+          return <Comment content={comment} />;
+        })}
+      </div>
     </article>
   );
 }
